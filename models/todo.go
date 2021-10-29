@@ -13,8 +13,9 @@ import (
 )
 
 type Todo struct {
-	ID   primitive.ObjectID `json:"_id" bson:"_id"`
-	Item string             `bson:"item,omitempty" json:"item"`
+	ID        primitive.ObjectID `json:"_id" bson:"_id"`
+	Item      string             `bson:"item,omitempty" json:"item"`
+	Completed bool               `bson:"completed"`
 }
 
 var todoCollection *mongo.Collection = database.OpenCollection(database.Client, "todos")
@@ -23,6 +24,12 @@ var ctx, _ = context.WithTimeout(context.Background(), 100*time.Second)
 func getObjID(id string) primitive.ObjectID {
 	objID, _ := primitive.ObjectIDFromHex(id)
 	return objID
+}
+
+func SetupNewTodo(todo Todo) Todo {
+	todo.ID = primitive.NewObjectID()
+	todo.Completed = false
+	return todo
 }
 
 func (t Todo) GetAllTodos() []Todo {
@@ -57,7 +64,8 @@ func (t Todo) InsertOne(c *gin.Context) *mongo.InsertOneResult {
 	if err := c.BindJSON(&todo); err != nil {
 		log.Fatal(err)
 	}
-	res, err := todoCollection.InsertOne(ctx, todo)
+	readyTodo := SetupNewTodo(todo)
+	res, err := todoCollection.InsertOne(ctx, readyTodo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,4 +80,20 @@ func (t Todo) DeleteOne(id string) (*mongo.DeleteResult, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+func (t Todo) ToggleComplete(id string) error {
+	currentTodo := t.GetByID(id)
+
+	_, err := todoCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": currentTodo.ID},
+		bson.M{
+			"$set": bson.M{"completed": !currentTodo.Completed},
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

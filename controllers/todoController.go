@@ -34,3 +34,13 @@ func (t TodoController) DeleteOne(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "deleted one document"})
 }
+
+func (t TodoController) UpdateOne(c *gin.Context) {}
+
+func (t TodoController) ToggleComplete(c *gin.Context) {
+	err := todoModel.ToggleComplete(c.Param("id"))
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, err)
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "changed one document"})
+}

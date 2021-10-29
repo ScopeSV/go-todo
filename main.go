@@ -14,6 +14,7 @@ func main() {
 	router.GET("todo/:id", uc.GetOne)
 	router.POST("/todo", uc.AddOne)
 	router.DELETE("/todo/:id", uc.DeleteOne)
+	router.PATCH("/todo/:id/complete", uc.ToggleComplete)
 
 	router.Run("localhost:8080")
 }
