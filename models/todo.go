@@ -48,15 +48,15 @@ func (t Todo) GetAllTodos() []Todo {
 	return todos
 }
 
-func (t Todo) GetByID(id string) Todo {
+func (t Todo) GetByID(id string) (Todo, error) {
 	var todo Todo
 	objID := getObjID(id)
 
 	if err := todoCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&todo); err != nil {
-		log.Fatal(err)
+		return Todo{}, err
 	}
 
-	return todo
+	return todo, nil
 }
 
 func (t Todo) InsertOne(c *gin.Context) *mongo.InsertOneResult {
@@ -83,7 +83,11 @@ func (t Todo) DeleteOne(id string) (*mongo.DeleteResult, error) {
 }
 
 func (t Todo) ToggleComplete(id string) error {
-	currentTodo := t.GetByID(id)
+	currentTodo, getErr := t.GetByID(id)
+
+	if getErr != nil {
+		return getErr
+	}
 
 	_, err := todoCollection.UpdateOne(
 		ctx,

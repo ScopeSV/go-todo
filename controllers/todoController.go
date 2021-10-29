@@ -17,7 +17,11 @@ func (t TodoController) GetAll(c *gin.Context) {
 }
 
 func (t TodoController) GetOne(c *gin.Context) {
-	todo := todoModel.GetByID(c.Param("id"))
+	todo, err := todoModel.GetByID(c.Param("id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, err)
+		return
+	}
 	c.IndentedJSON(http.StatusOK, todo)
 }
 
@@ -29,7 +33,8 @@ func (t TodoController) AddOne(c *gin.Context) {
 func (t TodoController) DeleteOne(c *gin.Context) {
 	_, err := todoModel.DeleteOne(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "deleted one document"})
@@ -40,7 +45,8 @@ func (t TodoController) UpdateOne(c *gin.Context) {}
 func (t TodoController) ToggleComplete(c *gin.Context) {
 	err := todoModel.ToggleComplete(c.Param("id"))
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "changed one document"})
 }
